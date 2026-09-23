@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>VOLTIC ⚡ — Ignite The Unknown</title>
+<meta name="description" content="VOLTIC. Zero sugar. 200mg natural caffeine. A charge you can feel in nine minutes flat." />
+<meta name="theme-color" content="#060607" />
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='7' fill='%23060607'/><path d='M18.6 3 L9 18 h5.2 L12.4 29 L23 13.4 h-5.4 Z' fill='%23c8ff00'/></svg>" />
+
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+
+<!-- ── Preloader ───────────────────────────────────────────── -->
+<div class="loader" id="loader">
+  <div class="loader__inner">
+    <div class="loader__mark">⚡</div>
+    <div class="loader__word">VOLTIC</div>
+    <div class="loader__bar"><i id="loaderBar"></i></div>
+    <div class="loader__count mono"><span id="loaderNum">0</span>%</div>
+  </div>
+  <div class="loader__curtain"></div>
+</div>
+
+<!-- ── Atmosphere ──────────────────────────────────────────── -->
+<div class="grain" aria-hidden="true"></div>
+<div class="vignette" aria-hidden="true"></div>
+<canvas id="webgl" aria-hidden="true"></canvas>
+<div class="webgl-fallback" id="webglFallback" aria-hidden="true"></div>
+
+<!-- ── Hero wordmark ───────────────────────────────────────────
+     Deliberately a sibling of <main> rather than a child. #webgl sits
+     at z-index 1 and main at z-index 10, so an element inside main can
+     never fall behind the canvas whatever its own z-index says — the
+     stacking context is already decided by main. Out here the wordmark
+     can take z-index 0 and the can then crosses it in 3D, which is the
+     whole look: letters behind, aluminium in front.
+     The hero's real <h1> text lives here, so nothing is lost to search
+     engines or screen readers by drawing it this large and this low.
+     ──────────────────────────────────────────────────────────── -->
+<h1 class="stage-word"><span>Voltic</span></h1>
+
+<!-- ── Custom cursor ───────────────────────────────────────── -->
+<div class="cursor" id="cursor" aria-hidden="true">
+  <div class="cursor__dot"></div>
+  <div class="cursor__ring"><span class="cursor__label"></span></div>
+</div>
+
+<!-- ── Nav ─────────────────────────────────────────────────── -->
+<header class="nav" id="nav">
+  <a class="nav__logo" href="#top" data-cursor="link">
+    <span class="nav__mark">⚡</span>
+    <span class="nav__word">VOLTIC</span>
+  </a>
+
+  <nav class="nav__links" id="navLinks">
+    <a href="#about" data-cursor="link"><span>Formula</span></a>
+    <a href="#flavors" data-cursor="link"><span>Flavors</span></a>
+    <a href="#specs" data-cursor="link"><span>Science</span></a>
+  </nav>
+
+  <a class="btn btn--ghost nav__cta" href="#cta" data-magnetic data-cursor="link">
+    <span class="btn__fill"></span><span class="btn__text">Buy the drop</span>
+  </a>
+
+  <button class="nav__burger" id="burger" aria-label="Toggle menu" aria-expanded="false">
+    <i></i><i></i>
+  </button>
+</header>
+
+<div class="mobile-menu" id="mobileMenu">
+  <a href="#about">Formula</a>
+  <a href="#flavors">Flavors</a>
+  <a href="#specs">Science</a>
+  <a href="#cta">Buy the drop</a>
+</div>
+
+<main id="main">
+
+  <!-- ── Hero ──────────────────────────────────────────────── -->
+  <section class="hero" id="top">
+    <div class="hero__scrim" aria-hidden="true"></div>
+
+    <div class="hero__top">
+      <p class="eyebrow reveal" data-reveal>New formula — 2026 drop</p>
+    </div>
+
+    <div class="hero__bottom">
+      <p class="hero__sub reveal" data-reveal>
+        Zero sugar. 200&nbsp;mg natural caffeine. A charge you can feel<br />
+        in nine minutes flat.
+      </p>
+      <div class="hero__actions reveal" data-reveal>
+        <a class="btn btn--solid" href="#cta" data-magnetic data-cursor="link">
+          <span class="btn__fill"></span><span class="btn__text">Shop the drop</span>
+        </a>
+        <a class="btn btn--play" href="#about" data-cursor="link">
+          <span class="play"><i></i></span> Watch the film
+        </a>
+      </div>
+    </div>
+
+    <div class="hero__rail">
+      <span class="mono">01 / 06</span>
+      <div class="hero__scrollbar"><i></i></div>
+      <span class="mono">Scroll to charge</span>
+    </div>
+  </section>
+
+  <!-- ── Marquee ───────────────────────────────────────────── -->
+  <div class="marquee" aria-hidden="true">
+    <div class="marquee__track" data-marquee data-speed="-1">
+      <span>Energy</span><b>⚡</b><span>Focus</span><b>⚡</b><span>Power</span><b>⚡</b>
+      <span>Endurance</span><b>⚡</b><span>Clarity</span><b>⚡</b><span>Charge</span><b>⚡</b>
+    </div>
+  </div>
+
+  <!-- ── About / pinned chapters ───────────────────────────── -->
+  <section class="about" id="about">
+    <div class="about__sticky">
+      <div class="about__head">
+        <p class="eyebrow reveal" data-reveal>The formula</p>
+        <h2 class="h2">
+          <span class="line"><span class="line__inner" data-split>Built for the</span></span>
+          <span class="line"><span class="line__inner line__inner--accent" data-split>relentless</span></span>
+        </h2>
+      </div>
+
+      <div class="chapters" id="chapters">
+        <article class="chapter is-active" data-chapter="0">
+          <span class="chapter__idx mono">01</span>
+          <h3 class="chapter__title">200&nbsp;mg natural caffeine</h3>
+          <p class="chapter__body">Green-coffee derived, paired with L-theanine so the lift arrives smooth instead of jagged. Peak plasma in nine minutes.</p>
+          <ul class="chapter__list">
+            <li>Green coffee bean extract</li>
+            <li>L-theanine, 100&nbsp;mg</li>
+          </ul>
+        </article>
+
+        <article class="chapter" data-chapter="1">
+          <span class="chapter__idx mono">02</span>
+          <h3 class="chapter__title">Zero sugar, zero crash</h3>
+          <p class="chapter__body">Sweetened with allulose and stevia leaf. No glycemic spike means no three-o'clock collapse — just a flat, level burn.</p>
+          <ul class="chapter__list">
+            <li>0&nbsp;g sugar · 10&nbsp;calories</li>
+            <li>Non-glycemic sweetener blend</li>
+          </ul>
+        </article>
+
+        <article class="chapter" data-chapter="2">
+          <span class="chapter__idx mono">03</span>
+          <h3 class="chapter__title">Electrolyte matrix</h3>
+          <p class="chapter__body">Sodium, potassium and magnesium in a 3:2:1 ratio, matched to what you actually lose during output — not a marketing sprinkle.</p>
+          <ul class="chapter__list">
+            <li>Potassium citrate</li>
+            <li>Magnesium glycinate</li>
+          </ul>
+        </article>
+      </div>
+
+      <div class="about__progress">
+        <i id="chapterBar"></i>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── Flavors ───────────────────────────────────────────── -->
+  <section class="flavors" id="flavors">
+    <div class="flavors__sticky">
+      <div class="flavors__head">
+        <p class="eyebrow reveal" data-reveal>Three charges</p>
+        <h2 class="h2">
+          <span class="line"><span class="line__inner" data-split>Pick your</span></span>
+          <span class="line"><span class="line__inner line__inner--accent" data-split>current</span></span>
+        </h2>
+      </div>
+
+      <div class="flavor-list" id="flavorList">
+        <button class="flavor is-active" data-flavor="0" data-cursor="link" style="--sw:#c8ff00;--sw-rgb:200,255,0">
+          <span class="flavor__idx mono">01</span>
+          <span class="flavor__name">Citrus Storm</span>
+          <span class="flavor__note mono">Yuzu · Lime · Ginger</span>
+          <span class="flavor__bar"><i></i></span>
+        </button>
+        <button class="flavor" data-flavor="1" data-cursor="link" style="--sw:#00e5ff;--sw-rgb:0,229,255">
+          <span class="flavor__idx mono">02</span>
+          <span class="flavor__name">Blue Volt</span>
+          <span class="flavor__note mono">Blueberry · Acai · Mint</span>
+          <span class="flavor__bar"><i></i></span>
+        </button>
+        <button class="flavor" data-flavor="2" data-cursor="link" style="--sw:#ff2d55;--sw-rgb:255,45,85">
+          <span class="flavor__idx mono">03</span>
+          <span class="flavor__name">Crimson Rush</span>
+          <span class="flavor__note mono">Blood Orange · Chili</span>
+          <span class="flavor__bar"><i></i></span>
+        </button>
+      </div>
+
+      <div class="flavors__foot">
+        <span class="mono" id="flavorReadout">500 ML · 200 MG CAFFEINE · 0 G SUGAR</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── Specs ─────────────────────────────────────────────── -->
+  <section class="specs" id="specs">
+    <div class="specs__head">
+      <p class="eyebrow reveal" data-reveal>Inside the can</p>
+      <h2 class="h2">
+        <span class="line"><span class="line__inner" data-split>Numbers that</span></span>
+        <span class="line"><span class="line__inner line__inner--accent" data-split>hold up</span></span>
+      </h2>
+    </div>
+
+    <div class="specs__grid" id="specsGrid">
+      <article class="spec" data-tilt data-cursor="link">
+        <span class="spec__num mono">01</span>
+        <strong class="spec__val">200<em>mg</em></strong>
+        <span class="spec__label">Natural caffeine</span>
+      </article>
+      <article class="spec" data-tilt data-cursor="link">
+        <span class="spec__num mono">02</span>
+        <strong class="spec__val">0<em>g</em></strong>
+        <span class="spec__label">Added sugar</span>
+      </article>
+      <article class="spec" data-tilt data-cursor="link">
+        <span class="spec__num mono">03</span>
+        <strong class="spec__val">9<em>min</em></strong>
+        <span class="spec__label">Time to onset</span>
+      </article>
+      <article class="spec" data-tilt data-cursor="link">
+        <span class="spec__num mono">04</span>
+        <strong class="spec__val">5<em>hr</em></strong>
+        <span class="spec__label">Sustained release</span>
+      </article>
+      <article class="spec" data-tilt data-cursor="link">
+        <span class="spec__num mono">05</span>
+        <strong class="spec__val">10<em>cal</em></strong>
+        <span class="spec__label">Per 500&nbsp;ml can</span>
+      </article>
+      <article class="spec" data-tilt data-cursor="link">
+        <span class="spec__num mono">06</span>
+        <strong class="spec__val">100<em>%</em></strong>
+        <span class="spec__label">Recyclable aluminium</span>
+      </article>
+    </div>
+  </section>
+
+  <!-- ── CTA ───────────────────────────────────────────────── -->
+  <section class="cta" id="cta">
+    <div class="cta__inner">
+      <p class="eyebrow reveal" data-reveal>Limited first run — 40,000 cans</p>
+      <h2 class="cta__title">
+        <span class="line"><span class="line__inner" data-split>Feel the</span></span>
+        <span class="line"><span class="line__inner line__inner--accent" data-split>volt</span></span>
+      </h2>
+      <a class="btn btn--solid btn--lg" href="#" data-magnetic data-cursor="link">
+        <span class="btn__fill"></span><span class="btn__text">Buy the drop — $3.50</span>
+      </a>
+      <p class="cta__fine mono">Free shipping over $30 · Ships in 24h</p>
+    </div>
+  </section>
+
+</main>
+
+<!-- ── Footer ──────────────────────────────────────────────── -->
+<footer class="footer">
+  <div class="footer__marquee marquee">
+    <div class="marquee__track" data-marquee data-speed="1">
+      <span>Stay charged</span><b>⚡</b><span>Stay charged</span><b>⚡</b>
+    </div>
+  </div>
+
+  <div class="footer__grid">
+    <div class="footer__col">
+      <span class="footer__label mono">Shop</span>
+      <a href="#" data-cursor="link">Original</a>
+      <a href="#" data-cursor="link">Blue Volt</a>
+      <a href="#" data-cursor="link">Crimson Rush</a>
+      <a href="#" data-cursor="link">Variety pack</a>
+    </div>
+    <div class="footer__col">
+      <span class="footer__label mono">Company</span>
+      <a href="#" data-cursor="link">About</a>
+      <a href="#" data-cursor="link">Sustainability</a>
+      <a href="#" data-cursor="link">Careers</a>
+      <a href="#" data-cursor="link">Press</a>
+    </div>
+    <div class="footer__col">
+      <span class="footer__label mono">Follow</span>
+      <a href="#" data-cursor="link">Instagram</a>
+      <a href="#" data-cursor="link">TikTok</a>
+      <a href="#" data-cursor="link">YouTube</a>
+      <a href="#" data-cursor="link">X</a>
+    </div>
+    <div class="footer__col footer__col--news">
+      <span class="footer__label mono">Get the drop first</span>
+      <form class="subscribe" id="subscribe" novalidate>
+        <input type="email" placeholder="you@email.com" aria-label="Email address" required />
+        <button type="submit" aria-label="Subscribe" data-cursor="link">→</button>
+      </form>
+      <span class="subscribe__msg mono" id="subscribeMsg"></span>
+    </div>
+  </div>
+
+  <div class="footer__wordmark" aria-hidden="true">VOLTIC</div>
+
+  <div class="footer__base">
+    <span class="mono">© 2026 VOLTIC Beverage Co.</span>
+    <span class="mono">Privacy · Terms · Accessibility</span>
+    <span class="mono">Not for children under 16</span>
+  </div>
+</footer>
+
+<noscript>
+  <div class="noscript">This site uses JavaScript for its 3D animation. Please enable it for the full experience.</div>
+</noscript>
+
+<!-- ── Scripts ─────────────────────────────────────────────── -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+<script src="https://unpkg.com/lenis@1.1.14/dist/lenis.min.js"></script>
+
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://unpkg.com/three@0.169.0/build/three.module.js",
+    "three/addons/": "https://unpkg.com/three@0.169.0/examples/jsm/"
+  }
+}
+</script>
+
+<script type="module" src="js/app.js"></script>
+</body>
+</html>

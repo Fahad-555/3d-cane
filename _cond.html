@@ -1,0 +1,64 @@
+<!doctype html>
+<!-- Dev harness: renders the condensation maps so they can be looked at.
+     Not part of the site. -->
+<meta charset="utf-8">
+<title>condensation</title>
+<style>
+  html, body { margin: 0; background: #111; }
+  canvas { display: block; width: 512px; height: 512px; image-rendering: pixelated; }
+  .row { display: flex; gap: 8px; padding: 8px; }
+</style>
+<div class="row">
+  <canvas id="n"></canvas>
+  <canvas id="r"></canvas>
+</div>
+<script type="importmap">
+{ "imports": { "three": "https://unpkg.com/three@0.169.0/build/three.module.js" } }
+</script>
+<script type="module">
+import { makeCondensationMaps } from './js/can-condensation.js';
+
+// Baseline: what does a bare createImageData/putImageData round trip
+// at this size cost on this renderer? Everything else is measured
+// against that.
+function canvasBaseline(S) {
+  const t = performance.now();
+  const c = document.createElement('canvas');
+  c.width = c.height = S;
+  const g = c.getContext('2d');
+  const img = g.createImageData(S, S);
+  for (let i = 0; i < img.data.length; i += 4) {
+    img.data[i] = 128; img.data[i + 3] = 255;
+  }
+  g.putImageData(img, 0, 0);
+  return Math.round(performance.now() - t);
+}
+
+const results = [];
+for (const S of [1024, 2048]) {
+  const base = canvasBaseline(S);
+  const t0 = performance.now();
+  const maps = makeCondensationMaps(S);
+  const dt = Math.round(performance.now() - t0);
+  results.push(`${S}: ${dt}ms (bare canvas round trip ${base}ms)`);
+  console.log(`size ${S} → ${dt}ms   bare round trip ${base}ms`);
+  maps.dispose();
+}
+
+// The big one, for the actual shipped resolution.
+const base1024 = canvasBaseline(1024);
+const t0 = performance.now();
+const maps = makeCondensationMaps(1024);
+const dt = Math.round(performance.now() - t0);
+results.push(`1024: ${dt}ms (bare ${base1024}ms)`);
+console.log(`size 1024 → ${dt}ms   bare round trip ${base1024}ms`);
+
+for (const [id, tex] of [['n', maps.normalMap], ['r', maps.roughnessMap]]) {
+  const src = tex.image;
+  const c = document.getElementById(id);
+  c.width = src.width;
+  c.height = src.height;
+  c.getContext('2d').drawImage(src, 0, 0);
+}
+document.title = 'ready';
+</script>

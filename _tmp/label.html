@@ -1,0 +1,142 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>label-harness</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  html,body{margin:0;background:#101013;color:#888;font:12px monospace}
+  .row{display:flex;gap:16px;padding:14px;border-bottom:1px solid #26262a}
+  canvas{display:block;background:#000}
+  .cap{position:absolute;padding:4px 6px;color:#c8ff00}
+  .box{position:relative}
+</style>
+<script type="importmap">
+{ "imports": {
+    "three": "https://unpkg.com/three@0.169.0/build/three.module.js",
+    "three/addons/": "https://unpkg.com/three@0.169.0/examples/jsm/"
+} }
+</script>
+<div id="out"></div>
+<script type="module">
+import * as THREE from 'three';
+import { makeLabelTexture } from '/js/can-label.js';
+
+const FLAVORS = [
+  { key: 'citrus',  name: 'Citrus Storm', accent: '#c8ff00', base: '#5c7a06', deep: '#131a02', ink: '#f7f7f8' },
+  { key: 'blue',    name: 'Blue Volt',    accent: '#00e5ff', base: '#075f75', deep: '#03181f', ink: '#f7f7f8' },
+  { key: 'crimson', name: 'Crimson Rush', accent: '#ff2d55', base: '#8a0a22', deep: '#1f0208', ink: '#f7f7f8' },
+];
+
+const out = document.getElementById('out');
+
+/* ---- cylinder projection preview ------------------------------ */
+function wrapPreview(src, uCenter, spanDeg, W, H) {
+  const c = document.createElement('canvas');
+  c.width = W; c.height = H;
+  const g = c.getContext('2d');
+  g.fillStyle = '#101013'; g.fillRect(0, 0, W, H);
+  const span = spanDeg * Math.PI / 180;
+  const R = (W / 2) / Math.sin(span / 2);
+  for (let i = 0; i < W; i++) {
+    const x = (i + 0.5) - W / 2;
+    const a = Math.asin(Math.max(-1, Math.min(1, x / R)));
+    let u = uCenter + a / (2 * Math.PI);
+    u = ((u % 1) + 1) % 1;
+    const sx = u * src.width;
+    g.drawImage(src, sx, 0, 1.2, src.height, i, 0, 1, H);
+  }
+  // cheap cylindrical shading so it reads as a can
+  const sh = g.createLinearGradient(0, 0, W, 0);
+  sh.addColorStop(0.00, 'rgba(0,0,0,0.92)');
+  sh.addColorStop(0.16, 'rgba(0,0,0,0.35)');
+  sh.addColorStop(0.34, 'rgba(255,255,255,0.05)');
+  sh.addColorStop(0.50, 'rgba(255,255,255,0.10)');
+  sh.addColorStop(0.68, 'rgba(0,0,0,0.10)');
+  sh.addColorStop(0.86, 'rgba(0,0,0,0.45)');
+  sh.addColorStop(1.00, 'rgba(0,0,0,0.94)');
+  g.globalCompositeOperation = 'multiply';
+  g.fillStyle = '#fff'; g.fillRect(0, 0, W, H);
+  g.globalCompositeOperation = 'source-over';
+  g.fillStyle = sh; g.fillRect(0, 0, W, H);
+  return c;
+}
+
+/* ---- webgl can ------------------------------------------------ */
+function buildProfile() {
+  const BODY_R=1.0, BODY_TOP=2.05, BODY_BOT=-2.10, NECK_R=0.72, NECK_TOP=2.50, BASE_BOT=-2.44;
+  const DOME_STEPS=10, BODY_STEPS=60, NECK_STEPS=14;
+  const pts=[];
+  for (let i=0;i<=DOME_STEPS-1;i++){const t=i/(DOME_STEPS-1);
+    pts.push(new THREE.Vector2(BODY_R*Math.sin(t*Math.PI/2), BASE_BOT+(BODY_BOT-BASE_BOT)*(1-Math.cos(t*Math.PI/2))));}
+  for (let i=1;i<=BODY_STEPS;i++) pts.push(new THREE.Vector2(BODY_R, BODY_BOT+(BODY_TOP-BODY_BOT)*(i/BODY_STEPS)));
+  for (let i=1;i<=NECK_STEPS;i++){const t=i/NECK_STEPS;
+    pts.push(new THREE.Vector2(BODY_R+(NECK_R-BODY_R)*(1-Math.cos(t*Math.PI/2)), BODY_TOP+(NECK_TOP-BODY_TOP)*Math.sin(t*Math.PI/2)));}
+  return pts;
+}
+
+const gl = new THREE.WebGLRenderer({ antialias: true, alpha: false });
+gl.setSize(760, 900, false);
+gl.toneMapping = THREE.ACESFilmicToneMapping;
+gl.toneMappingExposure = 1.05;
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x0d0d10);
+const cam = new THREE.PerspectiveCamera(35, 760/900, 0.1, 100);
+cam.position.set(0, 0, 10);
+scene.add(new THREE.AmbientLight(0xffffff, 1.1));
+const key = new THREE.DirectionalLight(0xffffff, 2.2); key.position.set(3,4,6); scene.add(key);
+const rim = new THREE.DirectionalLight(0xffffff, 1.0); rim.position.set(-4,1,-4); scene.add(rim);
+const geo = new THREE.LatheGeometry(buildProfile(), 128, Math.PI, Math.PI*2);
+const mat = new THREE.MeshStandardMaterial({ map: null, metalness: 0.25, roughness: 0.62 });
+const can = new THREE.Mesh(geo, mat); can.scale.setScalar(1.6); scene.add(can);
+gl.domElement.style.width = '380px'; gl.domElement.style.height = '450px';
+
+// three canvases side by side, one per flavour
+let slot = 0;
+function renderCan(tex, x) {
+  const prev = mat.map; mat.map = tex; mat.needsUpdate = true;
+  const w = 380, h = 450;
+  const c = document.createElement('canvas'); c.width = w; c.height = h;
+  const g = c.getContext('2d');
+  gl.setSize(w, h, false); cam.aspect = w/h; cam.updateProjectionMatrix();
+  can.rotation.y = 0;
+  gl.render(scene, cam);
+  g.drawImage(gl.domElement, 0, 0);
+  return c;
+}
+
+async function main() {
+  if (document.fonts && document.fonts.ready) await document.fonts.ready;
+  const t0 = performance.now();
+  const textures = FLAVORS.map((f) => makeLabelTexture(f));
+  window.__ms = Math.round(performance.now() - t0);
+
+  for (let i = 0; i < FLAVORS.length; i++) {
+    const f = FLAVORS[i];
+    const row = document.createElement('div'); row.className = 'row';
+
+    const b1 = document.createElement('div'); b1.className = 'box';
+    const flat = document.createElement('canvas'); flat.width = 620; flat.height = 620;
+    const fg = flat.getContext('2d');
+    fg.drawImage(textures[i].image, 0, 0, 620, 620);
+    b1.appendChild(flat);
+    row.appendChild(b1);
+
+    const b2 = document.createElement('div'); b2.className = 'box';
+    b2.appendChild(wrapPreview(textures[i].image, 0.5, 150, 620, 620));
+    row.appendChild(b2);
+
+    const b3 = document.createElement('div'); b3.className = 'box';
+    b3.appendChild(wrapPreview(textures[i].image, 0.25, 150, 620, 620));
+    row.appendChild(b3);
+
+    const b4 = document.createElement('div'); b4.className = 'box';
+    b4.appendChild(renderCan(textures[i], 0));
+    row.appendChild(b4);
+
+    out.appendChild(row);
+  }
+  document.title = 'ready';
+}
+main().catch((e) => { document.title = 'error: ' + e.message; console.error(e); });
+</script>
